@@ -2,50 +2,112 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-# data load
-df: pd.DataFrame = pd.read_csv("data/sales_data.csv")
+df: pd.DataFrame = pd.read_csv("data/covid_19.csv", on_bad_lines='skip')
 
-# cleaning
 
-df = df.dropna()
-df = df.drop_duplicates()
+important_columns = [
+    'location',
+    'continent',
+    'date',
+    'total_cases',
+    'new_cases',
+    'total_deaths',
+    'new_deaths',
+    'population'
+]
+
+df = df[important_columns]
+
+df = df.dropna(subset=['continent', 'total_cases', 'new_cases', 'new_deaths'])
+
 df['date'] = pd.to_datetime(df['date'])
 
-df['revenue'] = df['price'] * df['quantity']
-df['tax'] = df['revenue'] * 0.15
+country_cases = df.groupby('location')['total_cases'].max()
 
-# analysis
-
-product_sales = df.groupby('product')['quantity'].sum()
-df = df.set_index('date')
-monthly_sales = df.resample('MS')['revenue'].sum()
-revenue_per_product = df.groupby('product')['revenue'].sum()
-best_product_revenue = revenue_per_product.idxmax()
+top_10 = country_cases.sort_values(ascending=False).head(10)
+bottom_10 = country_cases.sort_values(ascending=True).head(10)
 
 
-plt.figure(figsize=(12, 8))
-product_sales.plot(kind='bar', color='skyblue')
-plt.title("Sales per product", fontsize=16)
-plt.xlabel("Product", fontsize=12)
-plt.ylabel("Quantity Sold", fontsize=12)
-plt.xticks(rotation=45)
+daily_cases = df.groupby('date')['new_cases'].sum().sort_index()
+
+rolling_avg = daily_cases.rolling(7).mean()
+
+
+plt.figure(figsize=(14, 10))
+top_10.sort_values().plot(kind='bar', color='skyblue')
+plt.title("Top 10 Countries by Total COVID Cases", fontsize=18, fontweight='bold', color='green')
+plt.xlabel("Country", fontsize=12, fontweight='bold', color='green')
+plt.ylabel("Total Cases", fontsize=12, fontweight='bold', color='green')
+plt.xticks(rotation=30)
+plt.legend()
 plt.tight_layout()
-plt.savefig("outputs/products_chart.png")
+plt.savefig("outputs_covid_19/top_10_countries_by_total_covid_cases.png")
 plt.close()
 
-plt.figure(figsize=(12, 8))
-monthly_sales.plot(kind='line', marker='*')
-plt.title("Monthly Sales", fontsize=16)
-plt.xlabel("Date", fontsize=12)
-plt.ylabel("Revenue", fontsize=12)
+
+plt.figure(figsize=(18, 8))
+daily_cases.plot(color='blue', kind='line')
+plt.title("Daily COVID Cases Worldwide", fontsize=18, fontweight='bold', color='green')
+plt.xlabel("Date", fontsize=12, fontweight='bold', color='green')
+plt.ylabel("New Cases", fontsize=12, fontweight='bold', color='green')
 plt.grid(True)
+plt.legend()
 plt.tight_layout()
-plt.savefig("outputs/monthly_sales.png")
+plt.savefig("outputs_covid_19/dialy_covid_cases_worldwide.png")
 plt.close()
 
-df.to_csv("outputs/cleaned_data.csv", index=False)
-revenue_per_product.to_csv("outputs/revenue_per_product.csv", index=True)
 
-print(f"Best Product By Revenue: {best_product_revenue}")
-print("\nRevenue per Product:")
-print(revenue_per_product)
+plt.figure(figsize=(14, 6))
+daily_cases.plot(alpha=0.3, label="Daily Cases")
+rolling_avg.plot(color='red', label="7-Day Average")
+plt.title("Covid Trend Over Time", fontweight='bold')
+plt.xlabel("Date", fontweight='bold')
+plt.ylabel("Cases", fontweight='bold')
+plt.legend()
+plt.tight_layout()
+plt.savefig("outputs_covid_19/covid_trend_over_time.png")
+
+
+
+report = f"""
+{"=" * 20} Data Analyst Report {"=" * 20}
+
+🟢 Top 10 Countries:
+
+{top_10}
+
+
+🌍 Global Cases:
+
+{daily_cases.sum()}
+
+
+📊 Average Daily Cases:
+
+{daily_cases.mean():.0f}
+
+
+📅 Peak Day:
+
+{daily_cases.idxmax()}
+
+
+🔥 Max Daily Cases:
+
+{rolling_avg.iloc[-1]:.0f}
+
+"""
+
+print(top_10)
+print()
+print(daily_cases.sum())
+print()
+
+print(daily_cases.mean())
+print()
+
+print(daily_cases.idxmax())
+print()
+
+print(rolling_avg.iloc[-1])
+print(report)
