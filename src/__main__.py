@@ -39,7 +39,6 @@ plt.title("Top 10 Countries by Total COVID Cases", fontsize=18, fontweight='bold
 plt.xlabel("Country", fontsize=12, fontweight='bold', color='green')
 plt.ylabel("Total Cases", fontsize=12, fontweight='bold', color='green')
 plt.xticks(rotation=30)
-plt.legend()
 plt.tight_layout()
 plt.savefig("outputs_covid_19/top_10_countries_by_total_covid_cases.png")
 plt.close()
@@ -51,9 +50,8 @@ plt.title("Daily COVID Cases Worldwide", fontsize=18, fontweight='bold', color='
 plt.xlabel("Date", fontsize=12, fontweight='bold', color='green')
 plt.ylabel("New Cases", fontsize=12, fontweight='bold', color='green')
 plt.grid(True)
-plt.legend()
 plt.tight_layout()
-plt.savefig("outputs_covid_19/dialy_covid_cases_worldwide.png")
+plt.savefig("outputs_covid_19/daily_covid_cases_worldwide.png")
 plt.close()
 
 
@@ -69,8 +67,7 @@ plt.savefig("outputs_covid_19/covid_trend_over_time.png")
 
 
 
-report = f"""
-{"=" * 20} Data Analyst Report {"=" * 20}
+report = f"""{"=" * 20} COVID-19 Analysis Report {"=" * 20}
 
 🟢 Top 10 Countries:
 
@@ -79,7 +76,7 @@ report = f"""
 
 🌍 Global Cases:
 
-{daily_cases.sum()}
+{daily_cases.sum():,.0f}
 
 
 📊 Average Daily Cases:
@@ -94,20 +91,9 @@ report = f"""
 
 🔥 Max Daily Cases:
 
-{rolling_avg.iloc[-1]:.0f}
+{rolling_avg.max():.0f}
 
 """
 
-print(top_10)
-print()
-print(daily_cases.sum())
-print()
-
-print(daily_cases.mean())
-print()
-
-print(daily_cases.idxmax())
-print()
-
-print(rolling_avg.iloc[-1])
-print(report)
+with open("outputs_covid_19/covid_19_analysis_report.txt", "w") as file:
+    file.write(report)
